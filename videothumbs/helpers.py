@@ -10,16 +10,17 @@ from django.db.models.fields.files import FieldFile
 class VideoThumbnailHelper(FieldFile):
 
     def __init__(self, *args, **kwargs):
-        super(VideoThumbnailHelper, self).__init__(*args, **kwargs)      
+        super(VideoThumbnailHelper, self).__init__(*args, **kwargs)
         self.sizes = self.field.sizes
         self.auto_crop = self.field.auto_crop
 
         for size in self.sizes:
-            name = 'url_%sx%s' % size
-            value = self.get_thumbnail_url(size)
-            setattr(self, name, value)
+            if self.name:
+                name = 'url_%sx%s' % size
+                value = self.get_thumbnail_url(size)
+                setattr(self, name, value)
 
-    def _generate_thumbnail(self, video, 
+    def _generate_thumbnail(self, video,
         thumbnail_width, thumbnail_height, crop=True, frames=100):
 
         histogram_list = []
@@ -33,10 +34,10 @@ class VideoThumbnailHelper(FieldFile):
         path = "%s/temp/" % settings.MEDIA_ROOT
         if not os.path.isdir(path):
           os.mkdir(path)
-          
+
         hashable_value = "%s%s" % (full_filename, int(time.time()))
         filehash = hashlib.md5(hashable_value).hexdigest()
-        
+
         frame_args = {'path': path, 'filename': filehash, 'frame': '%d'}
         frame = "%(path)s%(filename)s.%(frame)s.jpg" % frame_args
 
@@ -52,7 +53,7 @@ class VideoThumbnailHelper(FieldFile):
         if response != 0:
             return
 
-        # Loop through the generated images, open, and 
+        # Loop through the generated images, open, and
         # generate the image histogram.
         for index in range(1, frames + 1):
             frame_name = frame % index
@@ -107,7 +108,7 @@ class VideoThumbnailHelper(FieldFile):
             new_width = (width - min_size) / 2
             new_height = (height - min_size) / 2
             params = (
-                new_width, new_height, 
+                new_width, new_height,
                 width - new_width, height - new_height
             )
             image2 = image.crop(params)
@@ -142,11 +143,11 @@ class VideoThumbnailHelper(FieldFile):
 
     def save(self, name, content, save=True):
         super(VideoThumbnailHelper, self).save(name, content, save)
-        
+
         path, full_filename = os.path.split(self.path)
         filename, extension = os.path.splitext(full_filename)
         path += "/thumbnail/"
-        
+
         # By default thumbnails are stored under upload_to/thumbnails/
         # Make sure this directory exists.
         if not os.path.isdir(path):
