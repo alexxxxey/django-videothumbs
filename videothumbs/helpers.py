@@ -14,8 +14,8 @@ class VideoThumbnailHelper(FieldFile):
         self.sizes = self.field.sizes
         self.auto_crop = self.field.auto_crop
 
-        for size in self.sizes:
-            if self.name:
+        if self.name:
+            for size in self.sizes:
                 name = 'url_%sx%s' % size
                 value = self.get_thumbnail_url(size)
                 setattr(self, name, value)
