@@ -1,6 +1,6 @@
 import cStringIO, hashlib, math, os, subprocess, time
 
-from PIL import Image, ImageOps
+from PIL import Image
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -20,8 +20,7 @@ class VideoThumbnailHelper(FieldFile):
                 value = self.get_thumbnail_url(size)
                 setattr(self, name, value)
 
-    def _generate_thumbnail(self, video,
-        thumbnail_width, thumbnail_height, crop=True, frames=100):
+    def _generate_thumbnail(self, video, thumbnail_width, thumbnail_height, crop=True, frames=100):
 
         histogram_list = []
         frame_average = []
@@ -33,7 +32,7 @@ class VideoThumbnailHelper(FieldFile):
         # Make sure this directory exists.
         path = "%s/temp/" % settings.MEDIA_ROOT
         if not os.path.isdir(path):
-          os.mkdir(path)
+            os.mkdir(path)
 
         hashable_value = "%s%s" % (full_filename, int(time.time()))
         filehash = hashlib.md5(hashable_value).hexdigest()
@@ -45,8 +44,7 @@ class VideoThumbnailHelper(FieldFile):
         cmd_args = {'frames': frames, 'video_path': video.path, 'output': frame}
         command = "ffmpeg -i %(video_path)s -y -vframes %(frames)d %(output)s"
         command = command % cmd_args
-        response = subprocess.call(command, shell=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        response = subprocess.call(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Fail silently if ffmpeg is not installed.
         # the ffmpeg commandline tool that is.
@@ -113,12 +111,10 @@ class VideoThumbnailHelper(FieldFile):
             )
             image2 = image.crop(params)
             image2.load()
-            image2.thumbnail((thumbnail_width, thumbnail_height),
-                Image.ANTIALIAS)
+            image2.thumbnail((thumbnail_width, thumbnail_height), Image.ANTIALIAS)
         else:
             image2 = image
-            image2.thumbnail((thumbnail_width, thumbnail_height),
-                Image.ANTIALIAS)
+            image2.thumbnail((thumbnail_width, thumbnail_height), Image.ANTIALIAS)
 
         io = cStringIO.StringIO()
         image2.save(io, 'jpeg')
@@ -136,8 +132,8 @@ class VideoThumbnailHelper(FieldFile):
         width, height = size
         path += "/thumbnail/"
         url = '%(path)s%(filename)s.%(width)sx%(height)s.%(extension)s' % {
-          'path': path, 'filename': filename, 'width': width,
-          'height': height, 'extension': 'jpeg'}
+            'path': path, 'filename': filename, 'width': width,
+            'height': height, 'extension': 'jpeg'}
 
         return url
 
@@ -151,35 +147,35 @@ class VideoThumbnailHelper(FieldFile):
         # By default thumbnails are stored under upload_to/thumbnails/
         # Make sure this directory exists.
         if not os.path.isdir(path):
-          os.mkdir(path)
+            os.mkdir(path)
 
         # Cycle through the sizes and generate thumbnails.
         for size in self.sizes:
             width, height = size
             url = '%(path)s%(filename)s.%(width)sx%(height)s.%(extension)s' % {
-              'path': path, 'filename': filename, 'width': width,
-              'height': height, 'extension': 'jpeg'}
+                'path': path, 'filename': filename, 'width': width,
+                'height': height, 'extension': 'jpeg'}
 
             data = self._generate_thumbnail(content, width, height)
 
             # Fail silently if there is no data.
             if not data:
-              return
+                return
 
             self.storage.save(url, data)
 
     def delete(self, save=True):
-        super(VideoThumbnailHelper, self).delete(save)
         path, full_filename = os.path.split(self.url)
         filename, extension = os.path.splitext(full_filename)
         path += "/thumbnail/"
+        super(VideoThumbnailHelper, self).delete(save)
 
         # Cycle through the thumbnails to delete.
         for size in self.sizes:
             width, height = size
             url = '%(path)s%(filename)s.%(width)sx%(height)s.%(extension)s' % {
-              'path': path, 'filename': filename, 'width': width,
-              'height': height, 'extension': 'jpeg'}
+                'path': path, 'filename': filename, 'width': width,
+                'height': height, 'extension': 'jpeg'}
 
             try:
                 self.storage.delete(url)
